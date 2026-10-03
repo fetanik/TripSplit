@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="TripSplit.Api/TripSplit.Api.csproj" />
+  <Project Path="TripSplit.Mobile/TripSplit.Mobile.csproj" />
+</Solution>
