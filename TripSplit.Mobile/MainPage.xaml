@@ -18,19 +18,18 @@
 
         <CollectionView
             x:Name="TripsCollectionView"
-            Grid.Row="1">
+            Grid.Row="1"
+            SelectionMode="Single"
+            SelectionChanged="OnTripSelectionChanged">
 
             <CollectionView.EmptyView>
-
                 <Label
                     Text="Подорожей поки немає"
                     HorizontalOptions="Center"
                     VerticalOptions="Center" />
-
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
-
                 <DataTemplate>
 
                     <Border
@@ -51,13 +50,11 @@
 
                             <HorizontalStackLayout Spacing="5">
 
-                                <Label
-                                    Text="{Binding StartDate}" />
+                                <Label Text="{Binding StartDate}" />
 
                                 <Label Text="—" />
 
-                                <Label
-                                    Text="{Binding EndDate}" />
+                                <Label Text="{Binding EndDate}" />
 
                             </HorizontalStackLayout>
 
@@ -66,7 +63,6 @@
                     </Border>
 
                 </DataTemplate>
-
             </CollectionView.ItemTemplate>
 
         </CollectionView>

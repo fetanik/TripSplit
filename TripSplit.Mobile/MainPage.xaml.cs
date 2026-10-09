@@ -1,4 +1,5 @@
-﻿using TripSplit.Services;
+﻿using TripSplit.Models;
+using TripSplit.Services;
 using TripSplit.Views;
 
 namespace TripSplit;
@@ -25,9 +26,7 @@ public partial class MainPage : ContentPage
 
         try
         {
-            var trips =
-                await _tripApiService.GetTripsAsync();
-
+            var trips = await _tripApiService.GetTripsAsync();
             TripsCollectionView.ItemsSource = trips;
         }
         catch (Exception ex)
@@ -39,10 +38,23 @@ public partial class MainPage : ContentPage
         }
     }
 
-	private async void OnAddTripClicked(
+    private async void OnAddTripClicked(
         object? sender,
         EventArgs e)
     {
         await Shell.Current.GoToAsync(nameof(AddTripPage));
+    }
+
+    private async void OnTripSelectionChanged(
+        object? sender,
+        SelectionChangedEventArgs e)
+    {
+        if (e.CurrentSelection.FirstOrDefault() is not Trip trip)
+            return;
+
+        TripsCollectionView.SelectedItem = null;
+
+        await Shell.Current.GoToAsync(
+            $"{nameof(TripDetailsPage)}?tripId={trip.Id}");
     }
 }
