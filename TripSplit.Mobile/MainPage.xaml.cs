@@ -1,23 +1,48 @@
-﻿namespace TripSplit;
+﻿using TripSplit.Services;
+using TripSplit.Views;
+
+namespace TripSplit;
 
 public partial class MainPage : ContentPage
 {
-	int count = 0;
+    private readonly TripApiService _tripApiService;
 
-	public MainPage()
-	{
-		InitializeComponent();
-	}
+    public MainPage()
+    {
+        InitializeComponent();
 
-	private void OnCounterClicked(object? sender, EventArgs e)
-	{
-		count++;
+        var httpClient = new HttpClient
+        {
+            BaseAddress = new Uri("http://localhost:5170/")
+        };
 
-		if (count == 1)
-			CounterBtn.Text = $"Clicked {count} time";
-		else
-			CounterBtn.Text = $"Clicked {count} times";
+        _tripApiService = new TripApiService(httpClient);
+    }
 
-		SemanticScreenReader.Announce(CounterBtn.Text);
-	}
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        try
+        {
+            var trips =
+                await _tripApiService.GetTripsAsync();
+
+            TripsCollectionView.ItemsSource = trips;
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync(
+                "Помилка",
+                $"Не вдалося завантажити подорожі: {ex.Message}",
+                "OK");
+        }
+    }
+
+	private async void OnAddTripClicked(
+        object? sender,
+        EventArgs e)
+    {
+        await Shell.Current.GoToAsync(nameof(AddTripPage));
+    }
 }

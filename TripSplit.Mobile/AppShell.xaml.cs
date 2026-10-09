@@ -1,9 +1,15 @@
-﻿namespace TripSplit;
+﻿using TripSplit.Views;
+
+namespace TripSplit;
 
 public partial class AppShell : Shell
 {
-	public AppShell()
-	{
-		InitializeComponent();
-	}
+    public AppShell()
+    {
+        InitializeComponent();
+
+        Routing.RegisterRoute(
+            nameof(AddTripPage),
+            typeof(AddTripPage));
+    }
 }

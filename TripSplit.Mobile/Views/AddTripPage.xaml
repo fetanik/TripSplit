@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Class="TripSplit.Views.AddTripPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="Нова подорож">
+
+    <ScrollView>
+
+        <VerticalStackLayout
+            Padding="24"
+            Spacing="18">
+
+            <Label
+                Text="Створення подорожі"
+                FontSize="28"
+                FontAttributes="Bold" />
+
+            <VerticalStackLayout Spacing="6">
+
+                <Label Text="Назва подорожі" />
+
+                <Entry
+                    x:Name="NameEntry"
+                    Placeholder="Наприклад: Карпати 2027" />
+
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="6">
+
+                <Label Text="Місце призначення" />
+
+                <Entry
+                    x:Name="DestinationEntry"
+                    Placeholder="Наприклад: Яремче" />
+
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="6">
+
+                <Label Text="Дата початку" />
+
+                <DatePicker
+                    x:Name="StartDatePicker" />
+
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="6">
+
+                <Label Text="Дата завершення" />
+
+                <DatePicker
+                    x:Name="EndDatePicker" />
+
+            </VerticalStackLayout>
+
+            <Button
+                Text="Створити подорож"
+                Margin="0,16,0,0"
+                Clicked="OnCreateTripClicked" />
+
+        </VerticalStackLayout>
+
+    </ScrollView>
+
+</ContentPage>
