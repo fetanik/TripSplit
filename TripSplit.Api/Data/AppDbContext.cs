@@ -11,4 +11,17 @@ public class AppDbContext : DbContext
     }
 
     public DbSet<Trip> Trips => Set<Trip>();
+
+    public DbSet<Participant> Participants => Set<Participant>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Participant>()
+            .HasOne<Trip>()
+            .WithMany()
+            .HasForeignKey(participant => participant.TripId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
 }
