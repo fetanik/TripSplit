@@ -1,4 +1,4 @@
-namespace TripSplit.Api.Models;
+namespace TripSplit.Models;
 
 public class Participant
 {

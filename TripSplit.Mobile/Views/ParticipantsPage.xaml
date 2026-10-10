@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Class="TripSplit.Views.ParticipantsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <Grid
+        Padding="36,20,24,24"
+        RowDefinitions="Auto,Auto,*"
+        RowSpacing="20">
+
+        <Label
+            Text="Учасники"
+            FontSize="32"
+            FontAttributes="Bold" />
+
+        <Grid
+            Grid.Row="1"
+            ColumnDefinitions="*,Auto"
+            ColumnSpacing="12">
+
+            <Entry
+                x:Name="NameEntry"
+                Placeholder="Ім'я учасника"
+                VerticalOptions="Center" />
+
+            <Button
+                Grid.Column="1"
+                Text="+ Додати"
+                Clicked="OnAddParticipantClicked" />
+
+        </Grid>
+
+        <CollectionView
+            x:Name="ParticipantsCollectionView"
+            Grid.Row="2">
+
+            <CollectionView.EmptyView>
+
+                <VerticalStackLayout
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center"
+                    Spacing="8">
+
+                    <Label
+                        Text="Учасників поки немає"
+                        FontSize="18"
+                        HorizontalTextAlignment="Center" />
+
+                    <Label
+                        Text="Додайте першого учасника подорожі"
+                        Opacity="0.6"
+                        HorizontalTextAlignment="Center" />
+
+                </VerticalStackLayout>
+
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+
+                <DataTemplate>
+
+                    <Border
+                        Padding="16"
+                        Margin="0,0,0,10"
+                        StrokeThickness="1">
+
+                        <Grid
+                            ColumnDefinitions="*,Auto"
+                            ColumnSpacing="12">
+
+                            <Label
+                                Text="{Binding Name}"
+                                FontSize="19"
+                                VerticalOptions="Center" />
+
+                            <Button
+                                Grid.Column="1"
+                                Text="Видалити"
+                                CommandParameter="{Binding .}"
+                                Clicked="OnDeleteParticipantClicked" />
+
+                        </Grid>
+
+                    </Border>
+
+                </DataTemplate>
+
+            </CollectionView.ItemTemplate>
+
+        </CollectionView>
+
+    </Grid>
+
+</ContentPage>

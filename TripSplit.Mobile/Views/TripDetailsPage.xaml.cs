@@ -30,7 +30,8 @@ public partial class TripDetailsPage : ContentPage
 
         try
         {
-            var trip = await _tripApiService.GetTripAsync(tripId);
+            var trip =
+                await _tripApiService.GetTripAsync(tripId);
 
             if (trip is null)
             {
@@ -58,5 +59,16 @@ public partial class TripDetailsPage : ContentPage
                 $"Не вдалося завантажити подорож: {ex.Message}",
                 "OK");
         }
+    }
+
+    private async void OnParticipantsClicked(
+        object? sender,
+        EventArgs e)
+    {
+        if (!int.TryParse(TripId, out var tripId))
+            return;
+
+        await Shell.Current.GoToAsync(
+            $"{nameof(ParticipantsPage)}?tripId={tripId}");
     }
 }
