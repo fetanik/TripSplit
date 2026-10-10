@@ -19,7 +19,8 @@ public class TripApiService
     public async Task<List<Trip>> GetTripsAsync()
     {
         var trips =
-            await _httpClient.GetFromJsonAsync<List<Trip>>("api/trips");
+            await _httpClient.GetFromJsonAsync<List<Trip>>(
+                "api/trips");
 
         return trips ?? new List<Trip>();
     }
@@ -33,7 +34,9 @@ public class TripApiService
     public async Task<Trip?> CreateTripAsync(Trip trip)
     {
         var response =
-            await _httpClient.PostAsJsonAsync("api/trips", trip);
+            await _httpClient.PostAsJsonAsync(
+                "api/trips",
+                trip);
 
         response.EnsureSuccessStatusCode();
 
@@ -45,7 +48,8 @@ public class TripApiService
     // Participants
     // --------------------
 
-    public async Task<List<Participant>> GetParticipantsAsync(int tripId)
+    public async Task<List<Participant>> GetParticipantsAsync(
+        int tripId)
     {
         var participants =
             await _httpClient.GetFromJsonAsync<List<Participant>>(
@@ -76,6 +80,31 @@ public class TripApiService
         var response =
             await _httpClient.DeleteAsync(
                 $"api/trips/{tripId}/participants/{participantId}");
+
+        response.EnsureSuccessStatusCode();
+    }
+
+    // --------------------
+    // Expenses
+    // --------------------
+
+    public async Task<List<Expense>> GetExpensesAsync(
+        int tripId)
+    {
+        var expenses =
+            await _httpClient.GetFromJsonAsync<List<Expense>>(
+                $"api/trips/{tripId}/expenses");
+
+        return expenses ?? new List<Expense>();
+    }
+
+    public async Task DeleteExpenseAsync(
+        int tripId,
+        int expenseId)
+    {
+        var response =
+            await _httpClient.DeleteAsync(
+                $"api/trips/{tripId}/expenses/{expenseId}");
 
         response.EnsureSuccessStatusCode();
     }

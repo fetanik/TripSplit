@@ -71,4 +71,15 @@ public partial class TripDetailsPage : ContentPage
         await Shell.Current.GoToAsync(
             $"{nameof(ParticipantsPage)}?tripId={tripId}");
     }
+
+    private async void OnExpensesClicked(
+        object? sender,
+        EventArgs e)
+    {
+        if (!int.TryParse(TripId, out var tripId))
+            return;
+
+        await Shell.Current.GoToAsync(
+            $"{nameof(ExpensesPage)}?tripId={tripId}");
+    }
 }

@@ -56,7 +56,8 @@
 
             <Button
                 Text="Витрати"
-                HeightRequest="55" />
+                HeightRequest="55"
+                Clicked="OnExpensesClicked" />
 
             <Button
                 Text="Баланси та розрахунки"

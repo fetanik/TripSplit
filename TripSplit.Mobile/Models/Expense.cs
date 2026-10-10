@@ -12,7 +12,17 @@ public class Expense
 
     public int PaidByParticipantId { get; set; }
 
-    public DateTime Date { get; set; }
+    public string PaidByName { get; set; } = string.Empty;
+
+    public DateOnly Date { get; set; }
 
     public string Note { get; set; } = string.Empty;
+
+    public List<ExpenseShare> Shares { get; set; } = new();
+
+    public string AmountText => $"{Amount:F2} грн";
+
+    public string DateText => Date.ToString("dd.MM.yyyy");
+
+    public string PaidByText => $"Сплатив(ла): {PaidByName}";
 }
