@@ -98,6 +98,21 @@ public class TripApiService
         return expenses ?? new List<Expense>();
     }
 
+    public async Task<Expense?> CreateExpenseAsync(
+        int tripId,
+        CreateExpenseRequest request)
+    {
+        var response =
+            await _httpClient.PostAsJsonAsync(
+                $"api/trips/{tripId}/expenses",
+                request);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+            .ReadFromJsonAsync<Expense>();
+    }
+
     public async Task DeleteExpenseAsync(
         int tripId,
         int expenseId)

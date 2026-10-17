@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<ContentPage
+    x:Class="TripSplit.Views.AddExpensePage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <ScrollView>
+
+        <VerticalStackLayout
+            Padding="36,20,24,24"
+            Spacing="18">
+
+            <Label
+                Text="Нова витрата"
+                FontSize="32"
+                FontAttributes="Bold"
+                Margin="0,0,0,10" />
+
+            <Label
+                Text="Назва"
+                FontAttributes="Bold" />
+
+            <Entry
+                x:Name="TitleEntry"
+                Placeholder="Наприклад, Готель" />
+
+            <Label
+                Text="Сума"
+                FontAttributes="Bold" />
+
+            <Entry
+                x:Name="AmountEntry"
+                Placeholder="Наприклад, 3000"
+                Keyboard="Numeric" />
+
+            <Label
+                Text="Хто заплатив?"
+                FontAttributes="Bold" />
+
+            <Picker
+                x:Name="PayerPicker"
+                Title="Оберіть платника"
+                ItemDisplayBinding="{Binding Name}" />
+
+            <Label
+                Text="Дата"
+                FontAttributes="Bold" />
+
+            <DatePicker
+                x:Name="ExpenseDatePicker" />
+
+            <Label
+                Text="Між ким розподілити?"
+                FontAttributes="Bold" />
+
+            <CollectionView
+                x:Name="ParticipantsCollectionView"
+                HeightRequest="220">
+
+                <CollectionView.ItemTemplate>
+
+                    <DataTemplate>
+
+                        <Grid
+                            Padding="8"
+                            ColumnDefinitions="Auto,*"
+                            ColumnSpacing="12">
+
+                            <CheckBox
+                                IsChecked="{Binding IsSelected, Mode=TwoWay}"
+                                VerticalOptions="Center" />
+
+                            <Label
+                                Grid.Column="1"
+                                Text="{Binding Name}"
+                                FontSize="17"
+                                VerticalOptions="Center" />
+
+                        </Grid>
+
+                    </DataTemplate>
+
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+
+            <Label
+                Text="Примітка"
+                FontAttributes="Bold" />
+
+            <Editor
+                x:Name="NoteEditor"
+                Placeholder="Необов'язково"
+                HeightRequest="90" />
+
+            <Button
+                Text="Зберегти витрату"
+                HeightRequest="55"
+                Margin="0,10,0,0"
+                Clicked="OnSaveClicked" />
+
+        </VerticalStackLayout>
+
+    </ScrollView>
+
+</ContentPage>

@@ -50,4 +50,15 @@ public partial class ExpensesPage : ContentPage
                 "OK");
         }
     }
+
+    private async void OnAddExpenseClicked(
+        object? sender,
+        EventArgs e)
+    {
+        if (!int.TryParse(TripId, out var tripId))
+            return;
+
+        await Shell.Current.GoToAsync(
+            $"{nameof(AddExpensePage)}?tripId={tripId}");
+    }
 }
