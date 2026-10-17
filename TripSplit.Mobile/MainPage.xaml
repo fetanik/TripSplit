@@ -14,22 +14,25 @@
             Text="+ Нова подорож"
             HorizontalOptions="End"
             Margin="0,0,0,20"
-            Clicked="OnAddTripClicked" />
+            Command="{Binding AddTripCommand}" />
 
         <CollectionView
-            x:Name="TripsCollectionView"
             Grid.Row="1"
-            SelectionMode="Single"
-            SelectionChanged="OnTripSelectionChanged">
+            ItemsSource="{Binding Trips}"
+            SelectedItem="{Binding SelectedTrip, Mode=TwoWay}"
+            SelectionMode="Single">
 
             <CollectionView.EmptyView>
+
                 <Label
                     Text="Подорожей поки немає"
                     HorizontalOptions="Center"
                     VerticalOptions="Center" />
+
             </CollectionView.EmptyView>
 
             <CollectionView.ItemTemplate>
+
                 <DataTemplate>
 
                     <Border
@@ -37,7 +40,8 @@
                         Margin="0,0,0,12"
                         StrokeThickness="1">
 
-                        <VerticalStackLayout Spacing="6">
+                        <VerticalStackLayout
+                            Spacing="6">
 
                             <Label
                                 Text="{Binding Name}"
@@ -48,13 +52,18 @@
                                 Text="{Binding Destination}"
                                 FontSize="16" />
 
-                            <HorizontalStackLayout Spacing="5">
+                            <HorizontalStackLayout
+                                Spacing="5">
 
-                                <Label Text="{Binding StartDate}" />
+                                <Label
+                                    Text="{Binding StartDate,
+                                        StringFormat='{0:dd.MM.yyyy}'}" />
 
                                 <Label Text="—" />
 
-                                <Label Text="{Binding EndDate}" />
+                                <Label
+                                    Text="{Binding EndDate,
+                                        StringFormat='{0:dd.MM.yyyy}'}" />
 
                             </HorizontalStackLayout>
 
@@ -63,6 +72,7 @@
                     </Border>
 
                 </DataTemplate>
+
             </CollectionView.ItemTemplate>
 
         </CollectionView>

@@ -1,12 +1,11 @@
-﻿using TripSplit.Models;
-using TripSplit.Services;
-using TripSplit.Views;
+﻿using TripSplit.Services;
+using TripSplit.ViewModels;
 
 namespace TripSplit;
 
 public partial class MainPage : ContentPage
 {
-    private readonly TripApiService _tripApiService;
+    private readonly MainViewModel _viewModel;
 
     public MainPage()
     {
@@ -14,47 +13,24 @@ public partial class MainPage : ContentPage
 
         var httpClient = new HttpClient
         {
-            BaseAddress = new Uri("http://localhost:5170/")
+            BaseAddress = new Uri(
+                "http://localhost:5170/")
         };
 
-        _tripApiService = new TripApiService(httpClient);
+        var tripApiService =
+            new TripApiService(httpClient);
+
+        _viewModel =
+            new MainViewModel(tripApiService);
+
+        BindingContext =
+            _viewModel;
     }
 
-    protected override async void OnAppearing()
+    protected override void OnAppearing()
     {
         base.OnAppearing();
 
-        try
-        {
-            var trips = await _tripApiService.GetTripsAsync();
-            TripsCollectionView.ItemsSource = trips;
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlertAsync(
-                "Помилка",
-                $"Не вдалося завантажити подорожі: {ex.Message}",
-                "OK");
-        }
-    }
-
-    private async void OnAddTripClicked(
-        object? sender,
-        EventArgs e)
-    {
-        await Shell.Current.GoToAsync(nameof(AddTripPage));
-    }
-
-    private async void OnTripSelectionChanged(
-        object? sender,
-        SelectionChangedEventArgs e)
-    {
-        if (e.CurrentSelection.FirstOrDefault() is not Trip trip)
-            return;
-
-        TripsCollectionView.SelectedItem = null;
-
-        await Shell.Current.GoToAsync(
-            $"{nameof(TripDetailsPage)}?tripId={trip.Id}");
+        _viewModel.LoadTripsCommand.Execute(null);
     }
 }
