@@ -56,7 +56,7 @@
                         StrokeThickness="1">
 
                         <Grid
-                            RowDefinitions="Auto,Auto,Auto"
+                            RowDefinitions="Auto,Auto,Auto,Auto"
                             ColumnDefinitions="*,Auto"
                             RowSpacing="6">
 
@@ -69,8 +69,7 @@
                                 Grid.Column="1"
                                 Text="{Binding AmountText}"
                                 FontSize="18"
-                                FontAttributes="Bold"
-                                VerticalOptions="Center" />
+                                FontAttributes="Bold" />
 
                             <Label
                                 Grid.Row="1"
@@ -90,6 +89,25 @@
                                 Text="{Binding Note}"
                                 FontSize="14"
                                 Opacity="0.7" />
+
+                            <HorizontalStackLayout
+                                Grid.Row="3"
+                                Grid.ColumnSpan="2"
+                                HorizontalOptions="End"
+                                Spacing="10"
+                                Margin="0,8,0,0">
+
+                                <Button
+                                    Text="Редагувати"
+                                    CommandParameter="{Binding .}"
+                                    Clicked="OnEditExpenseClicked" />
+
+                                <Button
+                                    Text="Видалити"
+                                    CommandParameter="{Binding .}"
+                                    Clicked="OnDeleteExpenseClicked" />
+
+                            </HorizontalStackLayout>
 
                         </Grid>
 

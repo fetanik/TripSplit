@@ -28,10 +28,12 @@ public class TripApiService
     public async Task<Trip?> GetTripAsync(int id)
     {
         return await _httpClient
-            .GetFromJsonAsync<Trip>($"api/trips/{id}");
+            .GetFromJsonAsync<Trip>(
+                $"api/trips/{id}");
     }
 
-    public async Task<Trip?> CreateTripAsync(Trip trip)
+    public async Task<Trip?> CreateTripAsync(
+        Trip trip)
     {
         var response =
             await _httpClient.PostAsJsonAsync(
@@ -48,19 +50,22 @@ public class TripApiService
     // Participants
     // --------------------
 
-    public async Task<List<Participant>> GetParticipantsAsync(
-        int tripId)
+    public async Task<List<Participant>>
+        GetParticipantsAsync(int tripId)
     {
         var participants =
-            await _httpClient.GetFromJsonAsync<List<Participant>>(
-                $"api/trips/{tripId}/participants");
+            await _httpClient
+                .GetFromJsonAsync<List<Participant>>(
+                    $"api/trips/{tripId}/participants");
 
-        return participants ?? new List<Participant>();
+        return participants ??
+               new List<Participant>();
     }
 
-    public async Task<Participant?> CreateParticipantAsync(
-        int tripId,
-        Participant participant)
+    public async Task<Participant?>
+        CreateParticipantAsync(
+            int tripId,
+            Participant participant)
     {
         var response =
             await _httpClient.PostAsJsonAsync(
@@ -88,23 +93,53 @@ public class TripApiService
     // Expenses
     // --------------------
 
-    public async Task<List<Expense>> GetExpensesAsync(
-        int tripId)
+    public async Task<List<Expense>>
+        GetExpensesAsync(int tripId)
     {
         var expenses =
-            await _httpClient.GetFromJsonAsync<List<Expense>>(
-                $"api/trips/{tripId}/expenses");
+            await _httpClient
+                .GetFromJsonAsync<List<Expense>>(
+                    $"api/trips/{tripId}/expenses");
 
-        return expenses ?? new List<Expense>();
+        return expenses ??
+               new List<Expense>();
     }
 
-    public async Task<Expense?> CreateExpenseAsync(
-        int tripId,
-        CreateExpenseRequest request)
+    public async Task<Expense?>
+        GetExpenseAsync(
+            int tripId,
+            int expenseId)
+    {
+        return await _httpClient
+            .GetFromJsonAsync<Expense>(
+                $"api/trips/{tripId}/expenses/{expenseId}");
+    }
+
+    public async Task<Expense?>
+        CreateExpenseAsync(
+            int tripId,
+            CreateExpenseRequest request)
     {
         var response =
             await _httpClient.PostAsJsonAsync(
                 $"api/trips/{tripId}/expenses",
+                request);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content
+            .ReadFromJsonAsync<Expense>();
+    }
+
+    public async Task<Expense?>
+        UpdateExpenseAsync(
+            int tripId,
+            int expenseId,
+            CreateExpenseRequest request)
+    {
+        var response =
+            await _httpClient.PutAsJsonAsync(
+                $"api/trips/{tripId}/expenses/{expenseId}",
                 request);
 
         response.EnsureSuccessStatusCode();
@@ -124,8 +159,12 @@ public class TripApiService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<BalanceResult?> GetBalancesAsync(
-        int tripId)
+    // --------------------
+    // Balances
+    // --------------------
+
+    public async Task<BalanceResult?>
+        GetBalancesAsync(int tripId)
     {
         return await _httpClient
             .GetFromJsonAsync<BalanceResult>(

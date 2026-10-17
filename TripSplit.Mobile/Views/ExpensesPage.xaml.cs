@@ -1,3 +1,4 @@
+using TripSplit.Models;
 using TripSplit.Services;
 
 namespace TripSplit.Views;
@@ -15,7 +16,8 @@ public partial class ExpensesPage : ContentPage
 
         var httpClient = new HttpClient
         {
-            BaseAddress = new Uri("http://localhost:5170/")
+            BaseAddress =
+                new Uri("http://localhost:5170/")
         };
 
         _tripApiService =
@@ -31,13 +33,18 @@ public partial class ExpensesPage : ContentPage
 
     private async Task LoadExpensesAsync()
     {
-        if (!int.TryParse(TripId, out var tripId))
+        if (!int.TryParse(
+                TripId,
+                out var tripId))
+        {
             return;
+        }
 
         try
         {
             var expenses =
-                await _tripApiService.GetExpensesAsync(tripId);
+                await _tripApiService
+                    .GetExpensesAsync(tripId);
 
             ExpensesCollectionView.ItemsSource =
                 expenses;
@@ -55,10 +62,89 @@ public partial class ExpensesPage : ContentPage
         object? sender,
         EventArgs e)
     {
-        if (!int.TryParse(TripId, out var tripId))
+        if (!int.TryParse(
+                TripId,
+                out var tripId))
+        {
             return;
+        }
 
         await Shell.Current.GoToAsync(
-            $"{nameof(AddExpensePage)}?tripId={tripId}");
+            $"expense-form?tripId={tripId}");
+    }
+
+    private async void OnEditExpenseClicked(
+        object? sender,
+        EventArgs e)
+    {
+        if (!int.TryParse(
+                TripId,
+                out var tripId))
+        {
+            return;
+        }
+
+        if (sender is not Button button)
+            return;
+
+        if (button.CommandParameter
+            is not Expense expense)
+        {
+            return;
+        }
+
+        await Shell.Current.GoToAsync(
+            $"expense-form?tripId={tripId}" +
+            $"&expenseId={expense.Id}");
+    }
+
+    private async void OnDeleteExpenseClicked(
+        object? sender,
+        EventArgs e)
+    {
+        if (!int.TryParse(
+                TripId,
+                out var tripId))
+        {
+            return;
+        }
+
+        if (sender is not Button button)
+            return;
+
+        if (button.CommandParameter
+            is not Expense expense)
+        {
+            return;
+        }
+
+        var confirmed =
+            await DisplayAlertAsync(
+                "Видалити витрату?",
+                $"Ви дійсно хочете видалити " +
+                $"«{expense.Title}» на суму " +
+                $"{expense.Amount:F2} грн?",
+                "Видалити",
+                "Скасувати");
+
+        if (!confirmed)
+            return;
+
+        try
+        {
+            await _tripApiService
+                .DeleteExpenseAsync(
+                    tripId,
+                    expense.Id);
+
+            await LoadExpensesAsync();
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync(
+                "Помилка",
+                $"Не вдалося видалити витрату: {ex.Message}",
+                "OK");
+        }
     }
 }

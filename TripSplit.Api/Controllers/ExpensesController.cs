@@ -23,7 +23,8 @@ public class ExpensesController : ControllerBase
         int tripId)
     {
         var tripExists =
-            await _context.Trips.AnyAsync(trip => trip.Id == tripId);
+            await _context.Trips.AnyAsync(
+                trip => trip.Id == tripId);
 
         if (!tripExists)
             return NotFound("Подорож не знайдено.");
@@ -33,9 +34,6 @@ public class ExpensesController : ControllerBase
             .OrderByDescending(expense => expense.Date)
             .ThenByDescending(expense => expense.Id)
             .ToListAsync();
-
-        if (expenses.Count == 0)
-            return Ok(new List<ExpenseResponse>());
 
         var participants = await _context.Participants
             .Where(participant => participant.TripId == tripId)
@@ -47,46 +45,58 @@ public class ExpensesController : ControllerBase
             .Select(expense => expense.Id)
             .ToList();
 
-        var shares = await _context.ExpenseShares
-            .Where(share => expenseIds.Contains(share.ExpenseId))
-            .ToListAsync();
+        var shares = expenseIds.Count == 0
+            ? new List<ExpenseShare>()
+            : await _context.ExpenseShares
+                .Where(share =>
+                    expenseIds.Contains(share.ExpenseId))
+                .ToListAsync();
 
-        var result = expenses.Select(expense =>
-            new ExpenseResponse
-            {
-                Id = expense.Id,
-                TripId = expense.TripId,
-                Title = expense.Title,
-                Amount = expense.Amount,
-                PaidByParticipantId = expense.PaidByParticipantId,
-
-                PaidByName =
-                    participants.GetValueOrDefault(
-                        expense.PaidByParticipantId,
-                        "Невідомий учасник"),
-
-                Date = expense.Date,
-                Note = expense.Note,
-
-                Shares = shares
-                    .Where(share => share.ExpenseId == expense.Id)
-                    .Select(share =>
-                        new ExpenseShareResponse
-                        {
-                            ParticipantId = share.ParticipantId,
-
-                            ParticipantName =
-                                participants.GetValueOrDefault(
-                                    share.ParticipantId,
-                                    "Невідомий учасник"),
-
-                            ShareAmount = share.ShareAmount
-                        })
-                    .ToList()
-            })
+        var result = expenses
+            .Select(expense =>
+                ToResponse(
+                    expense,
+                    shares.Where(
+                        share =>
+                            share.ExpenseId == expense.Id),
+                    participants))
             .ToList();
 
         return Ok(result);
+    }
+
+    // GET: api/trips/2/expenses/1
+    [HttpGet("{expenseId:int}")]
+    public async Task<ActionResult<ExpenseResponse>> GetExpense(
+        int tripId,
+        int expenseId)
+    {
+        var expense = await _context.Expenses
+            .FirstOrDefaultAsync(
+                expense =>
+                    expense.Id == expenseId &&
+                    expense.TripId == tripId);
+
+        if (expense is null)
+            return NotFound("Витрату не знайдено.");
+
+        var shares = await _context.ExpenseShares
+            .Where(share =>
+                share.ExpenseId == expenseId)
+            .ToListAsync();
+
+        var participants = await _context.Participants
+            .Where(participant =>
+                participant.TripId == tripId)
+            .ToDictionaryAsync(
+                participant => participant.Id,
+                participant => participant.Name);
+
+        return Ok(
+            ToResponse(
+                expense,
+                shares,
+                participants));
     }
 
     // POST: api/trips/2/expenses
@@ -96,15 +106,18 @@ public class ExpensesController : ControllerBase
         CreateExpenseRequest request)
     {
         var tripExists =
-            await _context.Trips.AnyAsync(trip => trip.Id == tripId);
+            await _context.Trips.AnyAsync(
+                trip => trip.Id == tripId);
 
         if (!tripExists)
             return NotFound("Подорож не знайдено.");
 
-        var title = request.Title.Trim();
+        var title =
+            request.Title?.Trim() ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(title))
-            return BadRequest("Назва витрати є обов'язковою.");
+            return BadRequest(
+                "Назва витрати є обов'язковою.");
 
         var amount = decimal.Round(
             request.Amount,
@@ -112,52 +125,68 @@ public class ExpensesController : ControllerBase
             MidpointRounding.AwayFromZero);
 
         if (amount <= 0)
-            return BadRequest("Сума витрати повинна бути більшою за нуль.");
+            return BadRequest(
+                "Сума витрати повинна бути більшою за нуль.");
 
         var participantIds = request.ParticipantIds
             .Distinct()
             .ToList();
 
         if (participantIds.Count == 0)
+        {
             return BadRequest(
-                "Оберіть хоча б одного учасника для розподілу витрати.");
+                "Оберіть хоча б одного учасника " +
+                "для розподілу витрати.");
+        }
 
-        var tripParticipants = await _context.Participants
-            .Where(participant => participant.TripId == tripId)
-            .ToListAsync();
+        var tripParticipants =
+            await _context.Participants
+                .Where(participant =>
+                    participant.TripId == tripId)
+                .ToListAsync();
 
         var payer = tripParticipants
             .FirstOrDefault(
                 participant =>
-                    participant.Id == request.PaidByParticipantId);
+                    participant.Id ==
+                    request.PaidByParticipantId);
 
         if (payer is null)
+        {
             return BadRequest(
                 "Платник не належить до цієї подорожі.");
+        }
 
-        var validParticipantIds = tripParticipants
-            .Select(participant => participant.Id)
-            .ToHashSet();
+        var validParticipantIds =
+            tripParticipants
+                .Select(participant => participant.Id)
+                .ToHashSet();
 
         if (participantIds.Any(
                 participantId =>
-                    !validParticipantIds.Contains(participantId)))
+                    !validParticipantIds.Contains(
+                        participantId)))
         {
             return BadRequest(
-                "Один або кілька учасників не належать до цієї подорожі.");
+                "Один або кілька учасників " +
+                "не належать до цієї подорожі.");
         }
 
         await using var transaction =
-            await _context.Database.BeginTransactionAsync();
+            await _context.Database
+                .BeginTransactionAsync();
 
         var expense = new Expense
         {
             TripId = tripId,
             Title = title,
             Amount = amount,
-            PaidByParticipantId = request.PaidByParticipantId,
+            PaidByParticipantId =
+                request.PaidByParticipantId,
             Date = request.Date,
-            Note = request.Note.Trim()
+            Note =
+                request.Note?.Trim() ??
+                string.Empty
         };
 
         _context.Expenses.Add(expense);
@@ -165,58 +194,200 @@ public class ExpensesController : ControllerBase
         await _context.SaveChangesAsync();
 
         var shareAmounts =
-            SplitAmount(amount, participantIds.Count);
+            SplitAmount(
+                amount,
+                participantIds.Count);
 
-        var shares = new List<ExpenseShare>();
+        var shares =
+            new List<ExpenseShare>();
 
-        for (var i = 0; i < participantIds.Count; i++)
+        for (var i = 0;
+             i < participantIds.Count;
+             i++)
         {
-            shares.Add(new ExpenseShare
-            {
-                ExpenseId = expense.Id,
-                ParticipantId = participantIds[i],
-                ShareAmount = shareAmounts[i]
-            });
+            shares.Add(
+                new ExpenseShare
+                {
+                    ExpenseId = expense.Id,
+                    ParticipantId =
+                        participantIds[i],
+                    ShareAmount =
+                        shareAmounts[i]
+                });
         }
 
-        _context.ExpenseShares.AddRange(shares);
+        _context.ExpenseShares
+            .AddRange(shares);
 
         await _context.SaveChangesAsync();
 
         await transaction.CommitAsync();
 
-        var participantNames = tripParticipants
-            .ToDictionary(
-                participant => participant.Id,
-                participant => participant.Name);
+        var participantNames =
+            tripParticipants
+                .ToDictionary(
+                    participant => participant.Id,
+                    participant => participant.Name);
 
-        var result = new ExpenseResponse
-        {
-            Id = expense.Id,
-            TripId = expense.TripId,
-            Title = expense.Title,
-            Amount = expense.Amount,
-            PaidByParticipantId = expense.PaidByParticipantId,
-            PaidByName = payer.Name,
-            Date = expense.Date,
-            Note = expense.Note,
+        var result =
+            ToResponse(
+                expense,
+                shares,
+                participantNames);
 
-            Shares = shares.Select(share =>
-                new ExpenseShareResponse
-                {
-                    ParticipantId = share.ParticipantId,
-
-                    ParticipantName =
-                        participantNames[share.ParticipantId],
-
-                    ShareAmount = share.ShareAmount
-                })
-                .ToList()
-        };
-
-        return Created(
-            $"api/trips/{tripId}/expenses/{expense.Id}",
+        return CreatedAtAction(
+            nameof(GetExpense),
+            new
+            {
+                tripId,
+                expenseId = expense.Id
+            },
             result);
+    }
+
+    // PUT: api/trips/2/expenses/1
+    [HttpPut("{expenseId:int}")]
+    public async Task<ActionResult<ExpenseResponse>> UpdateExpense(
+        int tripId,
+        int expenseId,
+        CreateExpenseRequest request)
+    {
+        var expense = await _context.Expenses
+            .FirstOrDefaultAsync(
+                expense =>
+                    expense.Id == expenseId &&
+                    expense.TripId == tripId);
+
+        if (expense is null)
+            return NotFound("Витрату не знайдено.");
+
+        var title =
+            request.Title?.Trim() ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(title))
+            return BadRequest(
+                "Назва витрати є обов'язковою.");
+
+        var amount = decimal.Round(
+            request.Amount,
+            2,
+            MidpointRounding.AwayFromZero);
+
+        if (amount <= 0)
+            return BadRequest(
+                "Сума витрати повинна бути більшою за нуль.");
+
+        var participantIds =
+            request.ParticipantIds
+                .Distinct()
+                .ToList();
+
+        if (participantIds.Count == 0)
+        {
+            return BadRequest(
+                "Оберіть хоча б одного учасника " +
+                "для розподілу витрати.");
+        }
+
+        var tripParticipants =
+            await _context.Participants
+                .Where(participant =>
+                    participant.TripId == tripId)
+                .ToListAsync();
+
+        var payer = tripParticipants
+            .FirstOrDefault(
+                participant =>
+                    participant.Id ==
+                    request.PaidByParticipantId);
+
+        if (payer is null)
+        {
+            return BadRequest(
+                "Платник не належить до цієї подорожі.");
+        }
+
+        var validParticipantIds =
+            tripParticipants
+                .Select(participant => participant.Id)
+                .ToHashSet();
+
+        if (participantIds.Any(
+                participantId =>
+                    !validParticipantIds.Contains(
+                        participantId)))
+        {
+            return BadRequest(
+                "Один або кілька учасників " +
+                "не належать до цієї подорожі.");
+        }
+
+        await using var transaction =
+            await _context.Database
+                .BeginTransactionAsync();
+
+        expense.Title = title;
+        expense.Amount = amount;
+        expense.PaidByParticipantId =
+            request.PaidByParticipantId;
+        expense.Date = request.Date;
+        expense.Note =
+            request.Note?.Trim() ??
+            string.Empty;
+
+        var oldShares =
+            await _context.ExpenseShares
+                .Where(share =>
+                    share.ExpenseId == expenseId)
+                .ToListAsync();
+
+        _context.ExpenseShares
+            .RemoveRange(oldShares);
+
+        // Спочатку видаляємо старий розподіл.
+        await _context.SaveChangesAsync();
+
+        var shareAmounts =
+            SplitAmount(
+                amount,
+                participantIds.Count);
+
+        var newShares =
+            new List<ExpenseShare>();
+
+        for (var i = 0;
+             i < participantIds.Count;
+             i++)
+        {
+            newShares.Add(
+                new ExpenseShare
+                {
+                    ExpenseId = expense.Id,
+                    ParticipantId =
+                        participantIds[i],
+                    ShareAmount =
+                        shareAmounts[i]
+                });
+        }
+
+        _context.ExpenseShares
+            .AddRange(newShares);
+
+        await _context.SaveChangesAsync();
+
+        await transaction.CommitAsync();
+
+        var participantNames =
+            tripParticipants
+                .ToDictionary(
+                    participant => participant.Id,
+                    participant => participant.Name);
+
+        return Ok(
+            ToResponse(
+                expense,
+                newShares,
+                participantNames));
     }
 
     // DELETE: api/trips/2/expenses/1
@@ -241,24 +412,76 @@ public class ExpensesController : ControllerBase
         return NoContent();
     }
 
+    private static ExpenseResponse ToResponse(
+        Expense expense,
+        IEnumerable<ExpenseShare> shares,
+        Dictionary<int, string> participantNames)
+    {
+        return new ExpenseResponse
+        {
+            Id = expense.Id,
+            TripId = expense.TripId,
+            Title = expense.Title,
+            Amount = expense.Amount,
+
+            PaidByParticipantId =
+                expense.PaidByParticipantId,
+
+            PaidByName =
+                participantNames.GetValueOrDefault(
+                    expense.PaidByParticipantId,
+                    "Невідомий учасник"),
+
+            Date = expense.Date,
+            Note = expense.Note,
+
+            Shares = shares
+                .Select(
+                    share =>
+                        new ExpenseShareResponse
+                        {
+                            ParticipantId =
+                                share.ParticipantId,
+
+                            ParticipantName =
+                                participantNames
+                                    .GetValueOrDefault(
+                                        share.ParticipantId,
+                                        "Невідомий учасник"),
+
+                            ShareAmount =
+                                share.ShareAmount
+                        })
+                .ToList()
+        };
+    }
+
     private static List<decimal> SplitAmount(
         decimal amount,
         int participantCount)
     {
-        var totalCents = (long)decimal.Round(
-            amount * 100m,
-            0,
-            MidpointRounding.AwayFromZero);
+        var totalCents =
+            (long)decimal.Round(
+                amount * 100m,
+                0,
+                MidpointRounding.AwayFromZero);
 
-        var baseCents = totalCents / participantCount;
-        var remainder = totalCents % participantCount;
+        var baseCents =
+            totalCents / participantCount;
 
-        var result = new List<decimal>();
+        var remainder =
+            totalCents % participantCount;
 
-        for (var i = 0; i < participantCount; i++)
+        var result =
+            new List<decimal>();
+
+        for (var i = 0;
+             i < participantCount;
+             i++)
         {
             var cents =
-                baseCents + (i < remainder ? 1 : 0);
+                baseCents +
+                (i < remainder ? 1 : 0);
 
             result.Add(cents / 100m);
         }
