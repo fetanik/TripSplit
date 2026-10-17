@@ -82,4 +82,32 @@ public partial class TripDetailsPage : ContentPage
         await Shell.Current.GoToAsync(
             $"{nameof(ExpensesPage)}?tripId={tripId}");
     }
+
+    private async void OnBalancesClicked(
+        object? sender,
+        EventArgs e)
+    {
+        if (!int.TryParse(TripId, out var tripId))
+        {
+            await DisplayAlertAsync(
+                "Помилка",
+                "Не вдалося визначити подорож.",
+                "OK");
+
+            return;
+        }
+
+        try
+        {
+            await Shell.Current.GoToAsync(
+                $"balances?tripId={tripId}");
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlertAsync(
+                "Помилка навігації",
+                ex.ToString(),
+                "OK");
+        }
+    }
 }

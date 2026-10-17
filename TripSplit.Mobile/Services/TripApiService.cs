@@ -123,4 +123,12 @@ public class TripApiService
 
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<BalanceResult?> GetBalancesAsync(
+        int tripId)
+    {
+        return await _httpClient
+            .GetFromJsonAsync<BalanceResult>(
+                $"api/trips/{tripId}/balances");
+    }
 }

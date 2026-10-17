@@ -61,7 +61,8 @@
 
             <Button
                 Text="Баланси та розрахунки"
-                HeightRequest="55" />
+                HeightRequest="55" 
+                Clicked="OnBalancesClicked" />
 
         </VerticalStackLayout>
 
