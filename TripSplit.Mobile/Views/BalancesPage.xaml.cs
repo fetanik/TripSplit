@@ -1,11 +1,12 @@
 using TripSplit.Services;
+using TripSplit.ViewModels;
 
 namespace TripSplit.Views;
 
 [QueryProperty(nameof(TripId), "tripId")]
 public partial class BalancesPage : ContentPage
 {
-    private readonly TripApiService _tripApiService;
+    private readonly BalancesViewModel _viewModel;
 
     public string TripId { get; set; } = string.Empty;
 
@@ -15,63 +16,32 @@ public partial class BalancesPage : ContentPage
 
         var httpClient = new HttpClient
         {
-            BaseAddress = new Uri("http://localhost:5170/")
+            BaseAddress =
+                new Uri("http://localhost:5170/")
         };
 
-        _tripApiService =
+        var service =
             new TripApiService(httpClient);
+
+        _viewModel =
+            new BalancesViewModel(service);
+
+        BindingContext = _viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
 
-        await LoadBalancesAsync();
-    }
-
-    private async Task LoadBalancesAsync()
-    {
-        if (!int.TryParse(TripId, out var tripId))
+        if (!int.TryParse(
+                TripId,
+                out var tripId))
+        {
             return;
-
-        try
-        {
-            var result =
-                await _tripApiService.GetBalancesAsync(tripId);
-
-            if (result is null)
-            {
-                await DisplayAlertAsync(
-                    "Помилка",
-                    "Не вдалося отримати дані про баланси.",
-                    "OK");
-
-                return;
-            }
-
-            TotalExpensesLabel.Text =
-                result.TotalExpensesText;
-
-            BindableLayout.SetItemsSource(
-                BalancesLayout,
-                result.Balances);
-
-            BindableLayout.SetItemsSource(
-                SettlementsLayout,
-                result.Settlements);
-
-            NoSettlementsLabel.IsVisible =
-                result.Settlements.Count == 0;
-
-            SettlementsLayout.IsVisible =
-                result.Settlements.Count > 0;
         }
-        catch (Exception ex)
-        {
-            await DisplayAlertAsync(
-                "Помилка",
-                $"Не вдалося завантажити баланси: {ex.Message}",
-                "OK");
-        }
+
+        _viewModel.TripId = tripId;
+
+        await _viewModel.LoadAsync();
     }
 }

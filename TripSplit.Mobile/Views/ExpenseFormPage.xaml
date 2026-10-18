@@ -12,8 +12,7 @@
             Spacing="18">
 
             <Label
-                x:Name="PageTitleLabel"
-                Text="Нова витрата"
+                Text="{Binding PageTitle}"
                 FontSize="32"
                 FontAttributes="Bold"
                 Margin="0,0,0,10" />
@@ -23,7 +22,7 @@
                 FontAttributes="Bold" />
 
             <Entry
-                x:Name="TitleEntry"
+                Text="{Binding Title, Mode=TwoWay}"
                 Placeholder="Наприклад, Готель" />
 
             <Label
@@ -31,7 +30,7 @@
                 FontAttributes="Bold" />
 
             <Entry
-                x:Name="AmountEntry"
+                Text="{Binding AmountText, Mode=TwoWay}"
                 Placeholder="Наприклад, 3000"
                 Keyboard="Numeric" />
 
@@ -40,23 +39,24 @@
                 FontAttributes="Bold" />
 
             <Picker
-                x:Name="PayerPicker"
-                Title="Оберіть платника"
-                ItemDisplayBinding="{Binding Name}" />
+                ItemsSource="{Binding Payers}"
+                SelectedItem="{Binding SelectedPayer, Mode=TwoWay}"
+                ItemDisplayBinding="{Binding Name}"
+                Title="Оберіть платника" />
 
             <Label
                 Text="Дата"
                 FontAttributes="Bold" />
 
             <DatePicker
-                x:Name="ExpenseDatePicker" />
+                Date="{Binding ExpenseDate, Mode=TwoWay}" />
 
             <Label
                 Text="Між ким розподілити?"
                 FontAttributes="Bold" />
 
             <CollectionView
-                x:Name="ParticipantsCollectionView"
+                ItemsSource="{Binding ParticipantSelections}"
                 HeightRequest="220">
 
                 <CollectionView.ItemTemplate>
@@ -91,16 +91,15 @@
                 FontAttributes="Bold" />
 
             <Editor
-                x:Name="NoteEditor"
+                Text="{Binding Note, Mode=TwoWay}"
                 Placeholder="Необов'язково"
                 HeightRequest="90" />
 
             <Button
-                x:Name="SaveButton"
-                Text="Зберегти витрату"
+                Text="{Binding SaveButtonText}"
+                Command="{Binding SaveCommand}"
                 HeightRequest="55"
-                Margin="0,10,0,0"
-                Clicked="OnSaveClicked" />
+                Margin="0,10,0,0" />
 
         </VerticalStackLayout>
 

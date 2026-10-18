@@ -1,11 +1,12 @@
 using TripSplit.Services;
+using TripSplit.ViewModels;
 
 namespace TripSplit.Views;
 
 [QueryProperty(nameof(TripId), "tripId")]
 public partial class TripDetailsPage : ContentPage
 {
-    private readonly TripApiService _tripApiService;
+    private readonly TripDetailsViewModel _viewModel;
 
     public string TripId { get; set; } = string.Empty;
 
@@ -13,101 +14,38 @@ public partial class TripDetailsPage : ContentPage
     {
         InitializeComponent();
 
-        var httpClient = new HttpClient
-        {
-            BaseAddress = new Uri("http://localhost:5170/")
-        };
+        var httpClient =
+            new HttpClient
+            {
+                BaseAddress =
+                    new Uri(
+                        "http://localhost:5170/")
+            };
 
-        _tripApiService = new TripApiService(httpClient);
+        var service =
+            new TripApiService(httpClient);
+
+        _viewModel =
+            new TripDetailsViewModel(service);
+
+        BindingContext =
+            _viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
 
-        if (!int.TryParse(TripId, out var tripId))
-            return;
-
-        try
+        if (!int.TryParse(
+                TripId,
+                out var tripId))
         {
-            var trip =
-                await _tripApiService.GetTripAsync(tripId);
-
-            if (trip is null)
-            {
-                await DisplayAlertAsync(
-                    "Помилка",
-                    "Подорож не знайдено.",
-                    "OK");
-
-                return;
-            }
-
-            NameLabel.Text = trip.Name;
-            DestinationLabel.Text = trip.Destination;
-
-            StartDateLabel.Text =
-                trip.StartDate.ToString("dd.MM.yyyy");
-
-            EndDateLabel.Text =
-                trip.EndDate.ToString("dd.MM.yyyy");
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlertAsync(
-                "Помилка",
-                $"Не вдалося завантажити подорож: {ex.Message}",
-                "OK");
-        }
-    }
-
-    private async void OnParticipantsClicked(
-        object? sender,
-        EventArgs e)
-    {
-        if (!int.TryParse(TripId, out var tripId))
-            return;
-
-        await Shell.Current.GoToAsync(
-            $"{nameof(ParticipantsPage)}?tripId={tripId}");
-    }
-
-    private async void OnExpensesClicked(
-        object? sender,
-        EventArgs e)
-    {
-        if (!int.TryParse(TripId, out var tripId))
-            return;
-
-        await Shell.Current.GoToAsync(
-            $"{nameof(ExpensesPage)}?tripId={tripId}");
-    }
-
-    private async void OnBalancesClicked(
-        object? sender,
-        EventArgs e)
-    {
-        if (!int.TryParse(TripId, out var tripId))
-        {
-            await DisplayAlertAsync(
-                "Помилка",
-                "Не вдалося визначити подорож.",
-                "OK");
-
             return;
         }
 
-        try
-        {
-            await Shell.Current.GoToAsync(
-                $"balances?tripId={tripId}");
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlertAsync(
-                "Помилка навігації",
-                ex.ToString(),
-                "OK");
-        }
+        _viewModel.TripId =
+            tripId;
+
+        await _viewModel.LoadAsync();
     }
 }

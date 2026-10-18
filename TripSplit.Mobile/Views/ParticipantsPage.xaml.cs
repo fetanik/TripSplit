@@ -1,12 +1,12 @@
-using TripSplit.Models;
 using TripSplit.Services;
+using TripSplit.ViewModels;
 
 namespace TripSplit.Views;
 
 [QueryProperty(nameof(TripId), "tripId")]
 public partial class ParticipantsPage : ContentPage
 {
-    private readonly TripApiService _tripApiService;
+    private readonly ParticipantsViewModel _viewModel;
 
     public string TripId { get; set; } = string.Empty;
 
@@ -16,110 +16,32 @@ public partial class ParticipantsPage : ContentPage
 
         var httpClient = new HttpClient
         {
-            BaseAddress = new Uri("http://localhost:5170/")
+            BaseAddress =
+                new Uri("http://localhost:5170/")
         };
 
-        _tripApiService = new TripApiService(httpClient);
+        var service =
+            new TripApiService(httpClient);
+
+        _viewModel =
+            new ParticipantsViewModel(service);
+
+        BindingContext = _viewModel;
     }
 
     protected override async void OnAppearing()
     {
         base.OnAppearing();
 
-        await LoadParticipantsAsync();
-    }
-
-    private async Task LoadParticipantsAsync()
-    {
-        if (!int.TryParse(TripId, out var tripId))
-            return;
-
-        try
+        if (!int.TryParse(
+                TripId,
+                out var tripId))
         {
-            var participants =
-                await _tripApiService.GetParticipantsAsync(tripId);
-
-            ParticipantsCollectionView.ItemsSource = participants;
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlertAsync(
-                "Помилка",
-                $"Не вдалося завантажити учасників: {ex.Message}",
-                "OK");
-        }
-    }
-
-    private async void OnAddParticipantClicked(
-        object? sender,
-        EventArgs e)
-    {
-        if (!int.TryParse(TripId, out var tripId))
-            return;
-
-        var name = NameEntry.Text?.Trim();
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            await DisplayAlertAsync(
-                "Помилка",
-                "Введіть ім'я учасника.",
-                "OK");
-
             return;
         }
 
-        var participant = new Participant
-        {
-            Name = name
-        };
+        _viewModel.TripId = tripId;
 
-        try
-        {
-            await _tripApiService.CreateParticipantAsync(
-                tripId,
-                participant);
-
-            NameEntry.Text = string.Empty;
-
-            await LoadParticipantsAsync();
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlertAsync(
-                "Помилка",
-                $"Не вдалося додати учасника: {ex.Message}",
-                "OK");
-        }
-    }
-
-    private async void OnDeleteParticipantClicked(
-        object? sender,
-        EventArgs e)
-    {
-        if (!int.TryParse(TripId, out var tripId))
-            return;
-
-        if (sender is not Button button)
-            return;
-
-        if (button.CommandParameter is not Participant participant)
-            return;
-
-        try
-        {
-            await _tripApiService.DeleteParticipantAsync(
-                tripId,
-                participant.Id);
-
-            await LoadParticipantsAsync();
-        }
-        catch (Exception ex)
-        {
-            await DisplayAlertAsync(
-                "Помилка",
-                $"Не вдалося видалити учасника: {ex.Message}",
-                "OK");
-        }
+        await _viewModel.LoadAsync();
     }
 }

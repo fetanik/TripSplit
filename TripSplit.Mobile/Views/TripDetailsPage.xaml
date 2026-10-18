@@ -18,31 +18,18 @@
                 Margin="0,0,0,25" />
 
             <Label
-                x:Name="NameLabel"
+                Text="{Binding Name}"
                 FontSize="32"
                 FontAttributes="Bold" />
 
             <Label
-                x:Name="DestinationLabel"
+                Text="{Binding Destination}"
                 FontSize="20" />
 
-            <HorizontalStackLayout
-                Spacing="6"
-                Margin="0,5,0,10">
-
-                <Label
-                    x:Name="StartDateLabel"
-                    FontSize="16" />
-
-                <Label
-                    Text="—"
-                    FontSize="16" />
-
-                <Label
-                    x:Name="EndDateLabel"
-                    FontSize="16" />
-
-            </HorizontalStackLayout>
+            <Label
+                Text="{Binding DateRange}"
+                FontSize="16"
+                Margin="0,5,0,10" />
 
             <BoxView
                 HeightRequest="1"
@@ -52,17 +39,17 @@
             <Button
                 Text="Учасники"
                 HeightRequest="55"
-                Clicked="OnParticipantsClicked" />
+                Command="{Binding OpenParticipantsCommand}" />
 
             <Button
                 Text="Витрати"
                 HeightRequest="55"
-                Clicked="OnExpensesClicked" />
+                Command="{Binding OpenExpensesCommand}" />
 
             <Button
                 Text="Баланси та розрахунки"
-                HeightRequest="55" 
-                Clicked="OnBalancesClicked" />
+                HeightRequest="55"
+                Command="{Binding OpenBalancesCommand}" />
 
         </VerticalStackLayout>
 

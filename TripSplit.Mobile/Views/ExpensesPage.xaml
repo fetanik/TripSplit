@@ -2,6 +2,7 @@
 
 <ContentPage
     x:Class="TripSplit.Views.ExpensesPage"
+    x:Name="Page"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
@@ -19,11 +20,11 @@
             Grid.Row="1"
             Text="+ Нова витрата"
             HorizontalOptions="End"
-            Clicked="OnAddExpenseClicked" />
+            Command="{Binding AddExpenseCommand}" />
 
         <CollectionView
-            x:Name="ExpensesCollectionView"
-            Grid.Row="2">
+            Grid.Row="2"
+            ItemsSource="{Binding Expenses}">
 
             <CollectionView.EmptyView>
 
@@ -34,13 +35,11 @@
 
                     <Label
                         Text="Витрат поки немає"
-                        FontSize="18"
-                        HorizontalTextAlignment="Center" />
+                        FontSize="18" />
 
                     <Label
                         Text="Додайте першу витрату подорожі"
-                        Opacity="0.6"
-                        HorizontalTextAlignment="Center" />
+                        Opacity="0.6" />
 
                 </VerticalStackLayout>
 
@@ -99,13 +98,15 @@
 
                                 <Button
                                     Text="Редагувати"
-                                    CommandParameter="{Binding .}"
-                                    Clicked="OnEditExpenseClicked" />
+                                    Command="{Binding Source={x:Reference Page},
+                                                      Path=BindingContext.EditExpenseCommand}"
+                                    CommandParameter="{Binding .}" />
 
                                 <Button
                                     Text="Видалити"
-                                    CommandParameter="{Binding .}"
-                                    Clicked="OnDeleteExpenseClicked" />
+                                    Command="{Binding Source={x:Reference Page},
+                                                      Path=BindingContext.DeleteExpenseCommand}"
+                                    CommandParameter="{Binding .}" />
 
                             </HorizontalStackLayout>
 
