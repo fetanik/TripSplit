@@ -28,6 +28,7 @@ public class ExpenseFormViewModel : BaseViewModel
     public string PageTitle
     {
         get => _pageTitle;
+
         set => SetProperty(
             ref _pageTitle,
             value);
@@ -36,6 +37,7 @@ public class ExpenseFormViewModel : BaseViewModel
     public string SaveButtonText
     {
         get => _saveButtonText;
+
         set => SetProperty(
             ref _saveButtonText,
             value);
@@ -44,6 +46,7 @@ public class ExpenseFormViewModel : BaseViewModel
     public string Title
     {
         get => _title;
+
         set => SetProperty(
             ref _title,
             value);
@@ -52,6 +55,7 @@ public class ExpenseFormViewModel : BaseViewModel
     public string AmountText
     {
         get => _amountText;
+
         set => SetProperty(
             ref _amountText,
             value);
@@ -60,6 +64,7 @@ public class ExpenseFormViewModel : BaseViewModel
     public Participant? SelectedPayer
     {
         get => _selectedPayer;
+
         set => SetProperty(
             ref _selectedPayer,
             value);
@@ -68,6 +73,7 @@ public class ExpenseFormViewModel : BaseViewModel
     public DateTime? ExpenseDate
     {
         get => _expenseDate;
+
         set => SetProperty(
             ref _expenseDate,
             value);
@@ -76,6 +82,7 @@ public class ExpenseFormViewModel : BaseViewModel
     public string Note
     {
         get => _note;
+
         set => SetProperty(
             ref _note,
             value);
@@ -192,9 +199,10 @@ public class ExpenseFormViewModel : BaseViewModel
     private async Task LoadExpenseAsync()
     {
         var expense =
-            await _tripApiService.GetExpenseAsync(
-                TripId,
-                ExpenseId);
+            await _tripApiService
+                .GetExpenseAsync(
+                    TripId,
+                    ExpenseId);
 
         if (expense is null)
         {
@@ -214,7 +222,8 @@ public class ExpenseFormViewModel : BaseViewModel
         SaveButtonText =
             "Зберегти зміни";
 
-        Title = expense.Title;
+        Title =
+            expense.Title;
 
         AmountText =
             expense.Amount.ToString(
@@ -225,7 +234,8 @@ public class ExpenseFormViewModel : BaseViewModel
             expense.Date.ToDateTime(
                 TimeOnly.MinValue);
 
-        Note = expense.Note;
+        Note =
+            expense.Note;
 
         SelectedPayer =
             Payers.FirstOrDefault(
@@ -262,6 +272,9 @@ public class ExpenseFormViewModel : BaseViewModel
 
     private async Task SaveAsync()
     {
+        if (IsBusy)
+            return;
+
         var title =
             Title?.Trim();
 
@@ -298,13 +311,17 @@ public class ExpenseFormViewModel : BaseViewModel
             return;
         }
 
-        var selectedIds =
+        var selectedParticipantIds =
             ParticipantSelections
-                .Where(item => item.IsSelected)
-                .Select(item => item.ParticipantId)
+                .Where(
+                    participant =>
+                        participant.IsSelected)
+                .Select(
+                    participant =>
+                        participant.ParticipantId)
                 .ToList();
 
-        if (selectedIds.Count == 0)
+        if (selectedParticipantIds.Count == 0)
         {
             await Shell.Current.DisplayAlertAsync(
                 "Помилка",
@@ -314,30 +331,70 @@ public class ExpenseFormViewModel : BaseViewModel
             return;
         }
 
-        var request =
-            new CreateExpenseRequest
-            {
-                Title = title,
-                Amount = amount,
-
-                PaidByParticipantId =
-                    SelectedPayer.Id,
-
-                Date =
-                    DateOnly.FromDateTime(
-                        ExpenseDate ??
-                        DateTime.Today),
-
-                Note =
-                    Note?.Trim() ??
-                    string.Empty,
-
-                ParticipantIds =
-                    selectedIds
-            };
+        var expenseDate =
+            DateOnly.FromDateTime(
+                ExpenseDate ??
+                DateTime.Today);
 
         try
         {
+            IsBusy = true;
+
+            var trip =
+                await _tripApiService
+                    .GetTripAsync(TripId);
+
+            if (trip is null)
+            {
+                await Shell.Current.DisplayAlertAsync(
+                    "Помилка",
+                    "Не вдалося знайти подорож.",
+                    "OK");
+
+                return;
+            }
+
+            if (expenseDate < trip.StartDate ||
+                expenseDate > trip.EndDate)
+            {
+                var continueSaving =
+                    await Shell.Current.DisplayAlertAsync(
+                        "Дата поза межами подорожі",
+                        $"Подорож триває з " +
+                        $"{trip.StartDate:dd.MM.yyyy} до " +
+                        $"{trip.EndDate:dd.MM.yyyy}.\n\n" +
+                        $"Дата витрати: " +
+                        $"{expenseDate:dd.MM.yyyy}.\n\n" +
+                        "Це може бути попередня оплата " +
+                        "або витрата після завершення подорожі. " +
+                        "Зберегти витрату все одно?",
+                        "Зберегти",
+                        "Скасувати");
+
+                if (!continueSaving)
+                    return;
+            }
+
+            var request =
+                new CreateExpenseRequest
+                {
+                    Title = title,
+
+                    Amount = amount,
+
+                    PaidByParticipantId =
+                        SelectedPayer.Id,
+
+                    Date = expenseDate,
+
+                    Note =
+                        Note?.Trim() ??
+                        string.Empty,
+
+                    ParticipantIds =
+                        selectedParticipantIds
+                };
+
             if (IsEditMode)
             {
                 await _tripApiService
@@ -354,7 +411,8 @@ public class ExpenseFormViewModel : BaseViewModel
                         request);
             }
 
-            await Shell.Current.GoToAsync("..");
+            await Shell.Current
+                .GoToAsync("..");
         }
         catch (Exception ex)
         {
@@ -364,6 +422,10 @@ public class ExpenseFormViewModel : BaseViewModel
                     ? $"Не вдалося оновити витрату: {ex.Message}"
                     : $"Не вдалося створити витрату: {ex.Message}",
                 "OK");
+        }
+        finally
+        {
+            IsBusy = false;
         }
     }
 
