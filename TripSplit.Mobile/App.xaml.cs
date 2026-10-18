@@ -1,16 +1,19 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-
-namespace TripSplit;
+﻿namespace TripSplit;
 
 public partial class App : Application
 {
-	public App()
-	{
-		InitializeComponent();
-	}
+    private readonly AppShell _appShell;
 
-	protected override Window CreateWindow(IActivationState? activationState)
-	{
-		return new Window(new AppShell());
-	}
+    public App(AppShell appShell)
+    {
+        InitializeComponent();
+
+        _appShell = appShell;
+    }
+
+    protected override Window CreateWindow(
+        IActivationState? activationState)
+    {
+        return new Window(_appShell);
+    }
 }

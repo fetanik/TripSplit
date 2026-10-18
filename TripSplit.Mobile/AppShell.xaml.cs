@@ -4,9 +4,17 @@ namespace TripSplit;
 
 public partial class AppShell : Shell
 {
-    public AppShell()
+    public AppShell(MainPage mainPage)
     {
         InitializeComponent();
+
+        Items.Add(
+            new ShellContent
+            {
+                Title = "Мої подорожі",
+                Route = "MainPage",
+                Content = mainPage
+            });
 
         Routing.RegisterRoute(
             nameof(AddTripPage),

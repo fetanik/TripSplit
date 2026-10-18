@@ -1,4 +1,3 @@
-using TripSplit.Services;
 using TripSplit.ViewModels;
 
 namespace TripSplit.Views;
@@ -9,25 +8,18 @@ public partial class ExpenseFormPage : ContentPage
 {
     private readonly ExpenseFormViewModel _viewModel;
 
-    public string TripId { get; set; } = string.Empty;
+    public string TripId { get; set; } =
+        string.Empty;
 
-    public string ExpenseId { get; set; } = string.Empty;
+    public string ExpenseId { get; set; } =
+        string.Empty;
 
-    public ExpenseFormPage()
+    public ExpenseFormPage(
+        ExpenseFormViewModel viewModel)
     {
         InitializeComponent();
 
-        var httpClient = new HttpClient
-        {
-            BaseAddress =
-                new Uri("http://localhost:5170/")
-        };
-
-        var service =
-            new TripApiService(httpClient);
-
-        _viewModel =
-            new ExpenseFormViewModel(service);
+        _viewModel = viewModel;
 
         BindingContext = _viewModel;
     }
@@ -43,7 +35,8 @@ public partial class ExpenseFormPage : ContentPage
             return;
         }
 
-        _viewModel.TripId = tripId;
+        _viewModel.TripId =
+            tripId;
 
         if (int.TryParse(
                 ExpenseId,

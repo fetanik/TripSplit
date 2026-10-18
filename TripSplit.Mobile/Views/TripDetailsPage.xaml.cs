@@ -1,4 +1,3 @@
-using TripSplit.Services;
 using TripSplit.ViewModels;
 
 namespace TripSplit.Views;
@@ -8,28 +7,17 @@ public partial class TripDetailsPage : ContentPage
 {
     private readonly TripDetailsViewModel _viewModel;
 
-    public string TripId { get; set; } = string.Empty;
+    public string TripId { get; set; } =
+        string.Empty;
 
-    public TripDetailsPage()
+    public TripDetailsPage(
+        TripDetailsViewModel viewModel)
     {
         InitializeComponent();
 
-        var httpClient =
-            new HttpClient
-            {
-                BaseAddress =
-                    new Uri(
-                        "http://localhost:5170/")
-            };
+        _viewModel = viewModel;
 
-        var service =
-            new TripApiService(httpClient);
-
-        _viewModel =
-            new TripDetailsViewModel(service);
-
-        BindingContext =
-            _viewModel;
+        BindingContext = _viewModel;
     }
 
     protected override async void OnAppearing()
