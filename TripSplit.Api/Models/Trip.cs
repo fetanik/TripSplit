@@ -11,4 +11,6 @@ public class Trip
     public DateOnly StartDate { get; set; }
 
     public DateOnly EndDate { get; set; }
+
+    public string? OwnerUserId { get; set; }
 }
