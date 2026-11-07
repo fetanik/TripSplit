@@ -7,74 +7,126 @@ namespace TripSplit;
 
 public static class MauiProgram
 {
+    private const string ApiBaseAddress =
+        "http://localhost:5170/";
+
     public static MauiApp CreateMauiApp()
     {
-        var builder = MauiApp.CreateBuilder();
+        var builder =
+            MauiApp.CreateBuilder();
 
         builder
             .UseMauiApp<App>()
-            .ConfigureFonts(fonts =>
-            {
-                fonts.AddFont(
-                    "OpenSans-Regular.ttf",
-                    "OpenSansRegular");
+            .ConfigureFonts(
+                fonts =>
+                {
+                    fonts.AddFont(
+                        "OpenSans-Regular.ttf",
+                        "OpenSansRegular");
 
-                fonts.AddFont(
-                    "OpenSans-Semibold.ttf",
-                    "OpenSansSemibold");
-            });
+                    fonts.AddFont(
+                        "OpenSans-Semibold.ttf",
+                        "OpenSansSemibold");
+                });
 
         // --------------------
         // Services
         // --------------------
 
-        builder.Services.AddSingleton(
-            new HttpClient
-            {
-                BaseAddress =
-                    new Uri("http://localhost:5170/")
-            });
+        builder.Services
+            .AddSingleton<AuthService>(
+                _ =>
+                    new AuthService(
+                        new HttpClient
+                        {
+                            BaseAddress =
+                                new Uri(
+                                    ApiBaseAddress)
+                        }));
 
-        builder.Services.AddSingleton<TripApiService>();
+        builder.Services
+            .AddSingleton<TripApiService>(
+                serviceProvider =>
+                    new TripApiService(
+                        new HttpClient
+                        {
+                            BaseAddress =
+                                new Uri(
+                                    ApiBaseAddress)
+                        },
+                        serviceProvider
+                            .GetRequiredService<AuthService>()));
+
+        builder.Services
+            .AddSingleton<AppNavigationService>();
 
         // --------------------
         // ViewModels
         // --------------------
 
-        builder.Services.AddTransient<MainViewModel>();
+        builder.Services
+            .AddTransient<LoginViewModel>();
 
-        builder.Services.AddTransient<AddTripViewModel>();
+        builder.Services
+            .AddTransient<RegisterViewModel>();
 
-        builder.Services.AddTransient<TripDetailsViewModel>();
+        builder.Services
+            .AddTransient<MainViewModel>();
 
-        builder.Services.AddTransient<ParticipantsViewModel>();
+        builder.Services
+            .AddTransient<AddTripViewModel>();
 
-        builder.Services.AddTransient<ExpensesViewModel>();
+        builder.Services
+            .AddTransient<TripDetailsViewModel>();
 
-        builder.Services.AddTransient<ExpenseFormViewModel>();
+        builder.Services
+            .AddTransient<ParticipantsViewModel>();
 
-        builder.Services.AddTransient<BalancesViewModel>();
+        builder.Services
+            .AddTransient<ExpensesViewModel>();
+
+        builder.Services
+            .AddTransient<ExpenseFormViewModel>();
+
+        builder.Services
+            .AddTransient<BalancesViewModel>();
 
         // --------------------
         // Pages
         // --------------------
 
-        builder.Services.AddTransient<MainPage>();
+        builder.Services
+            .AddTransient<StartupPage>();
 
-        builder.Services.AddTransient<AddTripPage>();
+        builder.Services
+            .AddTransient<LoginPage>();
 
-        builder.Services.AddTransient<TripDetailsPage>();
+        builder.Services
+            .AddTransient<RegisterPage>();
 
-        builder.Services.AddTransient<ParticipantsPage>();
+        builder.Services
+            .AddTransient<MainPage>();
 
-        builder.Services.AddTransient<ExpensesPage>();
+        builder.Services
+            .AddTransient<AddTripPage>();
 
-        builder.Services.AddTransient<ExpenseFormPage>();
+        builder.Services
+            .AddTransient<TripDetailsPage>();
 
-        builder.Services.AddTransient<BalancesPage>();
+        builder.Services
+            .AddTransient<ParticipantsPage>();
 
-        // Shell створюємо один раз
-        builder.Services.AddSingleton<AppShell>();
+        builder.Services
+            .AddTransient<ExpensesPage>();
+
+        builder.Services
+            .AddTransient<ExpenseFormPage>();
+
+        builder.Services
+            .AddTransient<BalancesPage>();
+
+        builder.Services
+            .AddSingleton<AppShell>();
 
 #if DEBUG
         builder.Logging.AddDebug();

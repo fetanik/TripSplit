@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using TripSplit.Models;
 
@@ -6,10 +7,33 @@ namespace TripSplit.Services;
 public class TripApiService
 {
     private readonly HttpClient _httpClient;
+    private readonly AuthService _authService;
 
-    public TripApiService(HttpClient httpClient)
+    public TripApiService(
+        HttpClient httpClient,
+        AuthService authService)
     {
         _httpClient = httpClient;
+        _authService = authService;
+    }
+
+    private async Task PrepareAuthorizationAsync()
+    {
+        var token =
+            await _authService.GetTokenAsync();
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization =
+                null;
+
+            return;
+        }
+
+        _httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue(
+                "Bearer",
+                token);
     }
 
     // --------------------
@@ -18,15 +42,21 @@ public class TripApiService
 
     public async Task<List<Trip>> GetTripsAsync()
     {
+        await PrepareAuthorizationAsync();
+
         var trips =
-            await _httpClient.GetFromJsonAsync<List<Trip>>(
-                "api/trips");
+            await _httpClient
+                .GetFromJsonAsync<List<Trip>>(
+                    "api/trips");
 
         return trips ?? new List<Trip>();
     }
 
-    public async Task<Trip?> GetTripAsync(int id)
+    public async Task<Trip?> GetTripAsync(
+        int id)
     {
+        await PrepareAuthorizationAsync();
+
         return await _httpClient
             .GetFromJsonAsync<Trip>(
                 $"api/trips/{id}");
@@ -35,6 +65,8 @@ public class TripApiService
     public async Task<Trip?> CreateTripAsync(
         Trip trip)
     {
+        await PrepareAuthorizationAsync();
+
         var response =
             await _httpClient.PostAsJsonAsync(
                 "api/trips",
@@ -51,8 +83,11 @@ public class TripApiService
     // --------------------
 
     public async Task<List<Participant>>
-        GetParticipantsAsync(int tripId)
+        GetParticipantsAsync(
+            int tripId)
     {
+        await PrepareAuthorizationAsync();
+
         var participants =
             await _httpClient
                 .GetFromJsonAsync<List<Participant>>(
@@ -67,6 +102,8 @@ public class TripApiService
             int tripId,
             Participant participant)
     {
+        await PrepareAuthorizationAsync();
+
         var response =
             await _httpClient.PostAsJsonAsync(
                 $"api/trips/{tripId}/participants",
@@ -82,6 +119,8 @@ public class TripApiService
         int tripId,
         int participantId)
     {
+        await PrepareAuthorizationAsync();
+
         var response =
             await _httpClient.DeleteAsync(
                 $"api/trips/{tripId}/participants/{participantId}");
@@ -94,8 +133,11 @@ public class TripApiService
     // --------------------
 
     public async Task<List<Expense>>
-        GetExpensesAsync(int tripId)
+        GetExpensesAsync(
+            int tripId)
     {
+        await PrepareAuthorizationAsync();
+
         var expenses =
             await _httpClient
                 .GetFromJsonAsync<List<Expense>>(
@@ -110,6 +152,8 @@ public class TripApiService
             int tripId,
             int expenseId)
     {
+        await PrepareAuthorizationAsync();
+
         return await _httpClient
             .GetFromJsonAsync<Expense>(
                 $"api/trips/{tripId}/expenses/{expenseId}");
@@ -120,6 +164,8 @@ public class TripApiService
             int tripId,
             CreateExpenseRequest request)
     {
+        await PrepareAuthorizationAsync();
+
         var response =
             await _httpClient.PostAsJsonAsync(
                 $"api/trips/{tripId}/expenses",
@@ -137,6 +183,8 @@ public class TripApiService
             int expenseId,
             CreateExpenseRequest request)
     {
+        await PrepareAuthorizationAsync();
+
         var response =
             await _httpClient.PutAsJsonAsync(
                 $"api/trips/{tripId}/expenses/{expenseId}",
@@ -152,6 +200,8 @@ public class TripApiService
         int tripId,
         int expenseId)
     {
+        await PrepareAuthorizationAsync();
+
         var response =
             await _httpClient.DeleteAsync(
                 $"api/trips/{tripId}/expenses/{expenseId}");
@@ -164,8 +214,11 @@ public class TripApiService
     // --------------------
 
     public async Task<BalanceResult?>
-        GetBalancesAsync(int tripId)
+        GetBalancesAsync(
+            int tripId)
     {
+        await PrepareAuthorizationAsync();
+
         return await _httpClient
             .GetFromJsonAsync<BalanceResult>(
                 $"api/trips/{tripId}/balances");

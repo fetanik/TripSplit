@@ -1,19 +1,24 @@
-﻿namespace TripSplit;
+﻿using TripSplit.Views;
+
+namespace TripSplit;
 
 public partial class App : Application
 {
-    private readonly AppShell _appShell;
+    private readonly StartupPage _startupPage;
 
-    public App(AppShell appShell)
+    public App(
+        StartupPage startupPage)
     {
         InitializeComponent();
 
-        _appShell = appShell;
+        _startupPage =
+            startupPage;
     }
 
     protected override Window CreateWindow(
         IActivationState? activationState)
     {
-        return new Window(_appShell);
+        return new Window(
+            _startupPage);
     }
 }

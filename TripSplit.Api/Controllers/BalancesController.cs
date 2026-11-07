@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TripSplit.Api.Data;
@@ -5,6 +7,7 @@ using TripSplit.Api.DTOs;
 
 namespace TripSplit.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/trips/{tripId:int}/balances")]
 public class BalancesController : ControllerBase
@@ -21,12 +24,8 @@ public class BalancesController : ControllerBase
     public async Task<ActionResult<BalanceResponse>> GetBalances(
         int tripId)
     {
-        var tripExists =
-            await _context.Trips.AnyAsync(
-                trip => trip.Id == tripId);
-
-        if (!tripExists)
-            return NotFound("Подорож не знайдено.");
+        if (!await OwnsTripAsync(tripId))
+            return NotFound();
 
         var participants = await _context.Participants
             .Where(participant => participant.TripId == tripId)
@@ -198,5 +197,23 @@ public class BalancesController : ControllerBase
             = string.Empty;
 
         public decimal Amount { get; set; }
+    }
+
+    private async Task<bool> OwnsTripAsync(int tripId)
+    {
+        var userId = GetCurrentUserId();
+
+        return await _context.Trips.AnyAsync(
+            trip =>
+                trip.Id == tripId &&
+                trip.OwnerUserId == userId);
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(
+                   ClaimTypes.NameIdentifier)
+               ?? throw new InvalidOperationException(
+                   "User identifier was not found.");
     }
 }

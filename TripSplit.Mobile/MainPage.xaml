@@ -6,6 +6,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     Title="Мої подорожі">
 
+    <ContentPage.ToolbarItems>
+
+        <ToolbarItem
+            Text="Вийти"
+            Command="{Binding LogoutCommand}" />
+
+    </ContentPage.ToolbarItems>
+
     <Grid
         Padding="24"
         RowDefinitions="Auto,*">

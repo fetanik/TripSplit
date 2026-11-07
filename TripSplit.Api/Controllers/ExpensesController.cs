@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TripSplit.Api.Data;
@@ -6,6 +8,7 @@ using TripSplit.Api.Models;
 
 namespace TripSplit.Api.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("api/trips/{tripId:int}/expenses")]
 public class ExpensesController : ControllerBase
@@ -22,12 +25,8 @@ public class ExpensesController : ControllerBase
     public async Task<ActionResult<IEnumerable<ExpenseResponse>>> GetExpenses(
         int tripId)
     {
-        var tripExists =
-            await _context.Trips.AnyAsync(
-                trip => trip.Id == tripId);
-
-        if (!tripExists)
-            return NotFound("Подорож не знайдено.");
+        if (!await OwnsTripAsync(tripId))
+            return NotFound();
 
         var expenses = await _context.Expenses
             .Where(expense => expense.TripId == tripId)
@@ -71,6 +70,9 @@ public class ExpensesController : ControllerBase
         int tripId,
         int expenseId)
     {
+        if (!await OwnsTripAsync(tripId))
+            return NotFound();
+
         var expense = await _context.Expenses
             .FirstOrDefaultAsync(
                 expense =>
@@ -105,12 +107,8 @@ public class ExpensesController : ControllerBase
         int tripId,
         CreateExpenseRequest request)
     {
-        var tripExists =
-            await _context.Trips.AnyAsync(
-                trip => trip.Id == tripId);
-
-        if (!tripExists)
-            return NotFound("Подорож не знайдено.");
+        if (!await OwnsTripAsync(tripId))
+            return NotFound();
 
         var title =
             request.Title?.Trim() ?? string.Empty;
@@ -252,6 +250,9 @@ public class ExpensesController : ControllerBase
         int expenseId,
         CreateExpenseRequest request)
     {
+        if (!await OwnsTripAsync(tripId))
+            return NotFound();
+
         var expense = await _context.Expenses
             .FirstOrDefaultAsync(
                 expense =>
@@ -396,6 +397,9 @@ public class ExpensesController : ControllerBase
         int tripId,
         int expenseId)
     {
+        if (!await OwnsTripAsync(tripId))
+            return NotFound();
+
         var expense = await _context.Expenses
             .FirstOrDefaultAsync(
                 expense =>
@@ -487,5 +491,23 @@ public class ExpensesController : ControllerBase
         }
 
         return result;
+    }
+
+    private async Task<bool> OwnsTripAsync(int tripId)
+    {
+        var userId = GetCurrentUserId();
+
+        return await _context.Trips.AnyAsync(
+            trip =>
+                trip.Id == tripId &&
+                trip.OwnerUserId == userId);
+    }
+
+    private string GetCurrentUserId()
+    {
+        return User.FindFirstValue(
+                   ClaimTypes.NameIdentifier)
+               ?? throw new InvalidOperationException(
+                   "User identifier was not found.");
     }
 }
